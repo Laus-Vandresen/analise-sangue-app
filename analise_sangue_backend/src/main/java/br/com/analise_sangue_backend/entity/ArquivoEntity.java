@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,11 +21,14 @@ public class ArquivoEntity {
     @JoinColumn(name = "usuario_id")
     private UsuarioEntity usuario;
 
-    @Column(unique = true, nullable = false)
     private String nomeArquivo;
+
+    @Column
+    private LocalDateTime dataImportacao;
 
     public ArquivoEntity(UsuarioEntity usuario, String nomeArquivo) {
         this.usuario = usuario;
         this.nomeArquivo = nomeArquivo;
+        this.dataImportacao = LocalDateTime.now();
     }
 }

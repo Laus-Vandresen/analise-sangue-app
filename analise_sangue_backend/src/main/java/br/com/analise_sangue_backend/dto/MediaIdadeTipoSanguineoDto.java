@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class DoadorEstadoDto {
-    private String estado;
-    private Long quantidade;
+public class MediaIdadeTipoSanguineoDto {
+
+    private String tipoSanguineo;
+    private Double mediaIdade;
 }

@@ -1,10 +1,14 @@
 package br.com.analise_sangue_backend.entity;
 
 import br.com.analise_sangue_backend.dto.DoadorDto;
+import br.com.analise_sangue_backend.dto.FaixaEtariaImcDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 
 @Getter
@@ -21,7 +25,7 @@ public class DoadorEntity {
     private String cpf;
     private String rg;
     @Column(name = "data_nasc")
-    private String dataNascimento;
+    private LocalDate dataNascimento;
     private String sexo;
     private String mae;
     private String pai;
@@ -43,10 +47,11 @@ public class DoadorEntity {
     private ArquivoEntity arquivo;
 
     public DoadorEntity(DoadorDto dto, ArquivoEntity arquivo) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         this.nome = dto.getNome();
         this.cpf = dto.getCpf();
         this.rg = dto.getRg();
-        this.dataNascimento = dto.getDataNascimento();
+        this.dataNascimento = LocalDate.parse(dto.getDataNascimento(), formatter);
         this.sexo = dto.getSexo();
         this.mae = dto.getMae();
         this.pai = dto.getPai();

@@ -15,10 +15,14 @@ class LoginCubit extends Cubit<LoginState> {
   }
 
   logar(String nome, String senha) async {
+    emit(const LoadingLoginState());
     Response response = await webClient.login(nome, senha);
     if (response.statusCode == 200) {
-      sharedPreferences.save('jwt', response.data["jwt"]);
+      sharedPreferences.save('jwt', response.data['jwt']);
+      sharedPreferences.save('usuario', nome);
       emit(const DoneLoginState());
+    } else {
+      emit(const InitLoginState());
     }
   }
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class DoadorEstadoDto {
-    private String estado;
-    private Long quantidade;
+public class FaixaEtariaImcDto {
+    private Integer faixaEtaria;
+    private Double imcMedio;
 }

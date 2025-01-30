@@ -1,111 +1,103 @@
-import 'package:analise_sangue_mobile/screens/cadastro/cadastro_cubit.dart';
-import 'package:analise_sangue_mobile/screens/cadastro/cadastro_state.dart';
+import 'dart:io';
+
+import 'package:analise_sangue_mobile/components/card_arquivo.dart';
+import 'package:analise_sangue_mobile/components/custom_app_bar.dart';
+import 'package:analise_sangue_mobile/model/arquivo.dart';
+import 'package:analise_sangue_mobile/screens/importe_arquivo/importe_arquivo_cubit.dart';
+import 'package:analise_sangue_mobile/screens/importe_arquivo/importe_arquivo_state.dart';
+import 'package:analise_sangue_mobile/screens/login/login_container.dart';
+import 'package:analise_sangue_mobile/util/shared_preferences_util.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class CadastroView extends StatelessWidget {
-  const CadastroView({super.key});
+class ImporteArquivoView extends StatelessWidget {
+  const ImporteArquivoView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CadastroCubit, CadastroState>(builder: (context, state) {
-      return _CadastroScreen();
-    });
+    return BlocBuilder<ImporteArquivoCubit, ImporteArquivoState>(
+      builder: (context, state) {
+        if (state is InitImporteArquivoState) {
+          return _ImporteArquivoScreen(arquivos: null);
+        }
+        if (state is LoadedImporteArquivoState) {
+          return _ImporteArquivoScreen(arquivos: state.arquivos);
+        }
+        if (state is GoToVisualizarDadosState) {
+          return _ImporteArquivoScreen(arquivos: state.arquivos);
+        }
+        return _ImporteArquivoScreen(arquivos: null);
+      },
+    );
   }
 }
 
-class _CadastroScreen extends StatelessWidget {
-  final TextEditingController _nome = TextEditingController();
-  final TextEditingController _senha = TextEditingController();
+class _ImporteArquivoScreen extends StatelessWidget {
+  final List<Arquivo>? arquivos;
+
+  _ImporteArquivoScreen({required this.arquivos});
+
+  Future<String> _loadUserName() async {
+    return await SharedPreferencesUtil().get('usuario') ?? '';
+  }
+
+  void _logout(BuildContext context) async {
+    SharedPreferencesUtil().deleteToken('jwt');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => LoginContainer()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Crie uma conta',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _nome,
-                decoration: InputDecoration(
-                  labelText: 'Nome',
-                  prefixIcon: const Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _senha,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Senha',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  BlocProvider.of<CadastroCubit>(context)
-                      .cadastrar(_nome.text, _senha.text);
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  backgroundColor: colorScheme.primary,
-                ),
-                child: const Text(
-                  'Cadastrar',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Já possui uma conta? '),
-                  TextButton(
-                    onPressed: () {
-                      BlocProvider.of<CadastroCubit>(context).handleLogin();
-                    },
-                    child: Text(
-                      'Entrar',
-                      style: TextStyle(
-                        color: colorScheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return FutureBuilder<String>(
+      future: _loadUserName(),
+      builder: (context, snapshot) {
+        String userName = snapshot.data ?? '';
+        final colorScheme = Theme.of(context).colorScheme;
+
+        return Scaffold(
+          appBar: CustomAppBar(title: userName, onLogoutPressed: () => _logout(context), showBackButton: false),
+          backgroundColor: colorScheme.surface,
+          body: displayCardArquivos(arquivos),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+              if (result != null) {
+                File file = File(result.files.single.path!);
+                BlocProvider.of<ImporteArquivoCubit>(context).handleUploadArquivo(file);
+              }
+            },
+            backgroundColor: colorScheme.primary,
+            child: Icon(Icons.add, color: Colors.white),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget displayCardArquivos(List<Arquivo>? arquivos) {
+    return arquivos == null || arquivos!.isEmpty
+        ? const Center(
+      child: Text(
+        "Nenhum arquivo importado.\nToque no botão abaixo para importar um arquivo e processar os dados",
+        style: TextStyle(fontSize: 20),
+        textAlign: TextAlign.center,
       ),
+    )
+        : ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: arquivos.length,
+      itemBuilder: (context, index) {
+        final arquivo = arquivos[index];
+        return cardArquivo(
+          arquivo: arquivo,
+          onTapFunction: (id) => BlocProvider.of<ImporteArquivoCubit>(context).handleVisualizarDadosState(id),
+        );
+      },
     );
   }
 }

@@ -11,6 +11,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class ArquivoServiceImpl implements ArquivoService {
@@ -25,5 +27,12 @@ public class ArquivoServiceImpl implements ArquivoService {
         UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
         ArquivoEntity arquivoEntity = repository.save(new ArquivoEntity(usuarioEntity, arquivo.getNomeArquivo()));
         doadorService.salvaDoadores(arquivoEntity, arquivo.getDoadores());
+    }
+
+    @Override
+    public List<ArquivoDto> buscaArquivosUsuarioLogado() {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        List<ArquivoEntity> arquivoEntityList = repository.findByUsuarioIdOrderByIdDesc(usuarioEntity.getId());
+        return arquivoEntityList.stream().map(ArquivoDto::new).toList();
     }
 }

@@ -12,18 +12,17 @@ class AnaliseSangueApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login Screen',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5E60CE), // Base color
-          primary: const Color(0xFF5E60CE),
-          secondary: const Color(0xFF6930C3),
+          seedColor: const Color(0xFF5E60CE),
+          primary: const Color.fromRGBO(42, 155, 193, 1.0),
+          secondary: const Color.fromRGBO(28, 139, 175, 1.0),
           background: const Color(0xFFF0F0F3),
         ),
         textTheme: const TextTheme(
           headlineMedium: TextStyle(
-              fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black),
+              fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
           bodyMedium: TextStyle(fontSize: 16, color: Colors.black87),
         ),
       ),

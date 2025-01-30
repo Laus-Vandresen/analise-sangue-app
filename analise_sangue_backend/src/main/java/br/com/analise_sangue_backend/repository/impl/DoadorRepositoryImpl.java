@@ -1,15 +1,21 @@
 package br.com.analise_sangue_backend.repository.impl;
 
-import br.com.analise_sangue_backend.dto.DoadorEstadoDto;
+import br.com.analise_sangue_backend.dto.*;
+import br.com.analise_sangue_backend.entity.QArquivoEntity;
 import br.com.analise_sangue_backend.entity.QDoadorEntity;
+import br.com.analise_sangue_backend.entity.QUsuarioEntity;
 import br.com.analise_sangue_backend.repository.DoadorRepositoryCustom;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
 
@@ -17,9 +23,11 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
     private EntityManager em;
 
     private final QDoadorEntity doador = QDoadorEntity.doadorEntity;
+    private final QArquivoEntity arquivo = QArquivoEntity.arquivoEntity;
+    private final QUsuarioEntity usuario = QUsuarioEntity.usuarioEntity;
 
     @Override
-    public List<DoadorEstadoDto> contarDoadoresPorEstado() {
+    public List<DoadorEstadoDto> contarDoadoresPorEstado(Long usuarioId, Long arquivoId) {
         return new JPAQuery<DoadorEstadoDto>(em)
                 .select(Projections.constructor(
                         DoadorEstadoDto.class,
@@ -27,91 +35,144 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                         doador.count()
                 ))
                 .from(doador)
+                .join(doador.arquivo, arquivo)
+                .join(arquivo.usuario, usuario)
+                .where(usuario.id.eq(usuarioId).and(arquivo.id.eq(arquivoId)))
                 .groupBy(doador.estado)
                 .fetch();
     }
 
     @Override
-    public Map<String, Double> calcularImcMedioPorFaixaIdade() {
-        //Nao tenho idade, somente data de nascimento
-        return null;
-//        return queryFactory
-//                .select(
-//                        doador.idade.between(0, 10).when("0-10")
-//                                .when(doador.idade.between(11, 20), "11-20")
-//                                .when(doador.idade.between(21, 30), "21-30")
-//                                .when(doador.idade.between(31, 40), "31-40")
-//                                .when(doador.idade.between(41, 50), "41-50")
-//                                .when(doador.idade.between(51, 60), "51-60")
-//                                .otherwise("61+").as("faixaIdade"),
-//                        doador.peso.divide(doador.altura.multiply(doador.altura)).avg().as("imcMedio")
-//                )
-//                .from(doador)
-//                .groupBy(doador.idade.between(0, 10).when("0-10")
-//                        .when(doador.idade.between(11, 20), "11-20")
-//                        .when(doador.idade.between(21, 30), "21-30")
-//                        .when(doador.idade.between(31, 40), "31-40")
-//                        .when(doador.idade.between(41, 50), "41-50")
-//                        .when(doador.idade.between(51, 60), "51-60")
-//                        .otherwise("61+"))
-//                .fetch()
-//                .stream()
-//                .collect(Collectors.toMap(
-//                        tuple -> tuple.get(0, String.class),
-//                        tuple -> tuple.get(1, Double.class)
-//                ));
+    public List<FaixaEtariaImcDto> calcularImcMedioPorFaixaIdade(Long usuarioId, Long arquivoId) {
+        String sql = """
+            SELECT
+                FLOOR(DATE_PART('year', AGE(CAST(data_nasc AS date))) / 10) * 10 AS faixa_etaria,
+                ROUND(CAST(AVG(peso / (altura * altura)) AS numeric), 2) AS imc_medio
+            FROM
+                doador
+            JOIN arquivo ON arquivo.id = doador.arquivo_id
+            JOIN usuario ON usuario.id = arquivo.usuario_id
+            WHERE arquivo.id = :arquivoId
+                AND usuario.id = :usuarioId
+            GROUP BY
+                FLOOR(DATE_PART('year', AGE(CAST(data_nasc AS date))) / 10)
+            """;
+
+        Query query = em.createNativeQuery(sql);
+        query.setParameter("arquivoId", arquivoId);
+        query.setParameter("usuarioId", usuarioId);
+
+        List<Object[]> resultados = query.getResultList();
+
+        return resultados.stream()
+                .map(result -> new FaixaEtariaImcDto(
+                        ((Number) result[0]).intValue(),
+                        ((Number) result[1]).doubleValue()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, Double> calcularPercentualObesosPorSexo() {
-        return null;
-//        List<Tuple> totalObesos = new JPAQuery<ObesoSexoDto>(em)
-//                .select(doador.sexo, doador.count())
-//                .from(doador)
-//                .where(doador.peso.divide(doador.altura.multiply(doador.altura)).gt(30))
-//                .groupBy(doador.sexo)
-//                .fetch();
-//
-//        long totalGeral = totalObesos.stream()
-//                .mapToLong(tuple -> tuple.get(doador.count()))
-//                .sum();
-//
-//        return totalObesos.stream()
-//                .collect(Collectors.toMap(
-//                        tuple -> tuple.get(doador.sexo),
-//                        tuple -> (tuple.get(doador.count()).doubleValue() / totalGeral) * 100
-//                ));
+    public List<ObesidadePorSexoDto> calcularPercentualObesosPorSexo(Long usuarioId, Long arquivoId) {
+        JPAQuery<ObesidadePorSexoDto> query = new JPAQuery<>(em);
+
+        NumberExpression<Double> imc = doador.peso.divide(doador.altura.multiply(doador.altura));
+
+        NumberExpression<Integer> casoObeso = new CaseBuilder()
+                .when(imc.gt(30.0)).then(1)
+                .otherwise(0);
+
+        NumberExpression<Double> percentualObesos = Expressions.numberTemplate(
+                Double.class,
+                "ROUND({0} * 100.0 / {1}, 2)",
+                casoObeso.sum(),
+                doador.count()
+        );
+
+        query.select(Projections.constructor(
+                        ObesidadePorSexoDto.class,
+                        doador.sexo,
+                        percentualObesos.as("percentualObesos")
+                ))
+                .from(doador)
+                .join(doador.arquivo, arquivo)
+                .join(arquivo.usuario, usuario)
+                .where(arquivo.id.eq(arquivoId)
+                        .and(usuario.id.eq(usuarioId)))
+                .groupBy(doador.sexo);
+
+        return query.fetch();
     }
 
     @Override
-    public Map<String, Double> calcularMediaIdadePorTipoSanguineo() {
-        return null;
-//        return new JPAQuery<>em()
-//                .select(doador.tipoSanguineo, doador.idade.avg())
-//                .from(doador)
-//                .groupBy(doador.tipoSanguineo)
-//                .fetch()
-//                .stream()
-//                .collect(Collectors.toMap(
-//                        tuple -> tuple.get(doador.tipoSanguineo),
-//                        tuple -> tuple.get(doador.idade.avg())
-//                ));
+    public List<MediaIdadeTipoSanguineoDto> calcularMediaIdadePorTipoSanguineo(Long usuarioId, Long arquivoId) {
+        String sql = """
+                SELECT d.tipo_sanguineo,
+                       ROUND(AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, d.data_nasc))), 2) AS media_idade
+                FROM doador d
+                INNER JOIN arquivo a ON d.arquivo_id = a.id
+                INNER JOIN usuario u ON a.usuario_id = u.id
+                WHERE a.id = :arquivoId AND u.id = :usuarioId
+                GROUP BY d.tipo_sanguineo
+            """;
+
+        Query query = em.createNativeQuery(sql);
+        query.setParameter("arquivoId", arquivoId);
+        query.setParameter("usuarioId", usuarioId);
+
+        List<Object[]> resultados = query.getResultList();
+
+        return resultados.stream()
+                .map(result -> new MediaIdadeTipoSanguineoDto(
+                        ((String) result[0]),
+                        ((Number) result[1]).doubleValue()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, Long> contarDoadoresPorTipoSanguineoReceptor() {
-        return null;
-//        return new JPAQuery<>()
-//                .select(doador.tipoSanguineo, doador.count())
-//                .from(doador)
-//                .where(doador.idade.between(16, 69)
-//                        .and(doador.peso.gt(50)))
-//                .groupBy(doador.tipoSanguineo)
-//                .fetch()
-//                .stream()
-//                .collect(Collectors.toMap(
-//                        tuple -> tuple.get(doador.tipoSanguineo),
-//                        tuple -> tuple.get(doador.count())
-//                ));
+    public List<DoadorTipoSanguineoDto> contarDoadoresPorTipoSanguineoReceptor(Long usuarioId, Long arquivoId) {
+        String sql = """
+                SELECT
+                            r.tipo_receptor AS tipoReceptor,
+                            COUNT(d.id) AS quantidade
+                        FROM
+                            doador d
+                        CROSS JOIN LATERAL (
+                            SELECT unnest(string_to_array(
+                                CASE d.tipo_sanguineo
+                                    WHEN 'A+' THEN 'A+,A-,O+,O-'
+                                    WHEN 'A-' THEN 'A-,O-'
+                                    WHEN 'B+' THEN 'B+,B-,O+,O-'
+                                    WHEN 'B-' THEN 'B-,O-'
+                                    WHEN 'AB+' THEN 'A+,B+,O+,AB+,A-,B-,O-,AB-'
+                                    WHEN 'AB-' THEN 'A-,B-,O-,AB-'
+                                    WHEN 'O+' THEN 'O+,O-'
+                                    WHEN 'O-' THEN 'O-'
+                                END, ','
+                            )) AS tipo_receptor
+                        ) r
+                        INNER JOIN arquivo a ON d.arquivo_id = a.id
+                        INNER JOIN usuario u ON a.usuario_id = u.id
+                        WHERE
+                            a.id = :arquivoId AND u.id = :usuarioId
+                            AND AGE(current_date, d.data_nasc) BETWEEN INTERVAL '16 years' AND INTERVAL '69 years'
+                            AND d.peso > 50
+                        GROUP BY
+                            r.tipo_receptor
+            """;
+
+        Query query = em.createNativeQuery(sql);
+        query.setParameter("arquivoId", arquivoId);
+        query.setParameter("usuarioId", usuarioId);
+
+        List<Object[]> resultados = query.getResultList();
+
+        return resultados.stream()
+                .map(result -> new DoadorTipoSanguineoDto(
+                        ((String) result[0]),
+                        ((Number) result[1]).longValue()
+                ))
+                .collect(Collectors.toList());
     }
 }

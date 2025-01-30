@@ -1,5 +1,6 @@
 import 'package:analise_sangue_mobile/components/bloc_container.dart';
 import 'package:analise_sangue_mobile/screens/cadastro/cadastro_container.dart';
+import 'package:analise_sangue_mobile/screens/importe_arquivo/importe_arquivo_container.dart';
 import 'package:analise_sangue_mobile/screens/login/login_cubit.dart';
 import 'package:analise_sangue_mobile/screens/login/login_state.dart';
 import 'package:analise_sangue_mobile/screens/login/login_view.dart';
@@ -21,6 +22,12 @@ class LoginContainer extends BlocContainer {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => CadastroContainer()),
+                );
+              }
+              if (state is DoneLoginState) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ImporteArquivoContainer()),
                 );
               }
             },

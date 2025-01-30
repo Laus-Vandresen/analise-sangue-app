@@ -1,10 +1,12 @@
 package br.com.analise_sangue_backend.service.impl;
 
-import br.com.analise_sangue_backend.dto.DoadorDto;
+import br.com.analise_sangue_backend.dto.*;
 import br.com.analise_sangue_backend.entity.ArquivoEntity;
 import br.com.analise_sangue_backend.entity.DoadorEntity;
+import br.com.analise_sangue_backend.entity.UsuarioEntity;
 import br.com.analise_sangue_backend.repository.DoadorRepository;
 import br.com.analise_sangue_backend.service.DoadorService;
+import br.com.analise_sangue_backend.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import java.util.Map;
 public class DoadorServiceImpl implements DoadorService {
 
     private final DoadorRepository repository;
+    private final UsuarioService usuarioService;
 
     @Override
     public void salvaDoadores(ArquivoEntity arquivo, List<DoadorDto> doadoresDto) {
@@ -24,27 +27,32 @@ public class DoadorServiceImpl implements DoadorService {
     }
 
     @Override
-    public Map<String, Long> contarDoadoresPorEstado() {
-        return Map.of();
+    public List<DoadorEstadoDto> contarDoadoresPorEstado(Long arquivoId) {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        return repository.contarDoadoresPorEstado(usuarioEntity.getId(), arquivoId);
     }
 
     @Override
-    public Map<String, Double> calcularImcMedioPorFaixaIdade() {
-        return Map.of();
+    public List<FaixaEtariaImcDto> calcularImcMedioPorFaixaEtaria(Long arquivoId) {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        return repository.calcularImcMedioPorFaixaIdade(usuarioEntity.getId(), arquivoId);
     }
 
     @Override
-    public Map<String, Double> calcularPercentualObesosPorSexo() {
-        return Map.of();
+    public List<ObesidadePorSexoDto> calcularPercentualObesosPorSexo(Long arquivoId) {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        return repository.calcularPercentualObesosPorSexo(usuarioEntity.getId(), arquivoId);
     }
 
     @Override
-    public Map<String, Double> calcularMediaIdadePorTipoSanguineo() {
-        return Map.of();
+    public List<MediaIdadeTipoSanguineoDto> calcularMediaIdadePorTipoSanguineo(Long arquivoId) {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        return repository.calcularMediaIdadePorTipoSanguineo(usuarioEntity.getId(), arquivoId);
     }
 
     @Override
-    public Map<String, Long> contarDoadoresPorTipoSanguineoReceptor() {
-        return Map.of();
+    public List<DoadorTipoSanguineoDto> contarDoadoresPorTipoSanguineoReceptor(Long arquivoId) {
+        UsuarioEntity usuarioEntity = usuarioService.buscaUsuarioLogado();
+        return repository.contarDoadoresPorTipoSanguineoReceptor(usuarioEntity.getId(), arquivoId);
     }
 }

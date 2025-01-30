@@ -1,3 +1,4 @@
+import 'package:analise_sangue_mobile/components/loading.dart';
 import 'package:analise_sangue_mobile/screens/login/login_cubit.dart';
 import 'package:analise_sangue_mobile/screens/login/login_state.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,6 +11,12 @@ class LoginView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoginCubit, LoginState>(builder: (context, state) {
+      if (state is InitLoginState) {
+        return _LoginScreen();
+      }
+      if (state is LoadingLoginState || state is DoneLoginState) {
+        return Loading();
+      }
       return _LoginScreen();
     });
   }

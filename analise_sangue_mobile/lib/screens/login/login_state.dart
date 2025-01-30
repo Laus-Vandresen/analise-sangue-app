@@ -16,6 +16,11 @@ class GoToSignUpState extends LoginState {
 }
 
 @immutable
+class LoadingLoginState extends LoginState {
+  const LoadingLoginState();
+}
+
+@immutable
 class DoneLoginState extends LoginState {
   const DoneLoginState();
 }
