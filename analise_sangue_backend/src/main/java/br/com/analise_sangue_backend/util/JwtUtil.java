@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,7 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    //TODO passar para variavel de ambiente
-    private final String secretKey = "dXNlcl9zZWN1cmVfc2VjcmV0X2tleV9mb3JfSFMyNTY=";
+    private final String secretKey = System.getenv("SECRET_KEY");
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

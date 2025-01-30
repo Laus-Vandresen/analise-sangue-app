@@ -1,7 +1,7 @@
 enum TipoCardEnum {
-  candidatesByState,
-  averageIMCByAgeGroup,
-  obesityPercentage,
-  averageAgeByBloodType,
-  possibleDonorsByBloodType,
+  candidatosEstado,
+  imcMedioIdade,
+  percentualObesidade,
+  idadeMediaTipoSanguineo,
+  possivelDoadorTipoSanguineo,
 }

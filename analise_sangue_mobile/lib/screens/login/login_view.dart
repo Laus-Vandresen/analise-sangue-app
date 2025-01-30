@@ -39,7 +39,7 @@ class _LoginScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Bem vindo!',
+                'Bem vindo',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 32,

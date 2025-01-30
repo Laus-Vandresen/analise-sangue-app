@@ -53,35 +53,35 @@ class _VisualizarDadosScreen extends StatelessWidget {
                     children: [
                       _buildExpansionCard(
                         context: context,
-                        tipoCard: TipoCardEnum.candidatesByState,
+                        tipoCard: TipoCardEnum.candidatosEstado,
                         title: 'Candidatos por estado',
                         icon: Icons.people_outline,
                         state: state,
                       ),
                       _buildExpansionCard(
                         context: context,
-                        tipoCard: TipoCardEnum.averageIMCByAgeGroup,
+                        tipoCard: TipoCardEnum.imcMedioIdade,
                         title: 'IMC médio por faixa de idade',
                         icon: Icons.insights_outlined,
                         state: state,
                       ),
                       _buildExpansionCard(
                         context: context,
-                        tipoCard: TipoCardEnum.obesityPercentage,
+                        tipoCard: TipoCardEnum.percentualObesidade,
                         title: 'Percentual de obesidade',
                         icon: Icons.monitor_weight_outlined,
                         state: state,
                       ),
                       _buildExpansionCard(
                         context: context,
-                        tipoCard: TipoCardEnum.averageAgeByBloodType,
+                        tipoCard: TipoCardEnum.idadeMediaTipoSanguineo,
                         title: 'Idade média por tipo sanguíneo',
                         icon: Icons.bloodtype_outlined,
                         state: state,
                       ),
                       _buildExpansionCard(
                         context: context,
-                        tipoCard: TipoCardEnum.possibleDonorsByBloodType,
+                        tipoCard: TipoCardEnum.possivelDoadorTipoSanguineo,
                         title: 'Possíveis doadores por tipo sanguíneo',
                         icon: Icons.health_and_safety_outlined,
                         state: state,
@@ -150,40 +150,47 @@ class _VisualizarDadosScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: item.entries.map<Widget>((entry) {
-                    final keyLabels = {
-                      'estado': 'Estado',
-                      'quantidade': 'Quantidade',
-                      'faixaEtaria': 'Faixa etária',
-                      'imcMedio': 'IMC médio',
-                      'sexo': 'Sexo',
-                      'percentualObesos': 'Percentual obesos',
-                      'tipoSanguineo': 'Tipo sanguíneo',
-                      'mediaIdade': 'Média Idade',
-                      'tipoReceptor': 'Tipo receptor',
-                    };
-
+                    Map<String, String> keyLabels = getKeyLabels();
                     final label = keyLabels[entry.key] ?? entry.key;
-
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            '$label:',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            '${entry.value}',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildLinhaInformacaoCard(label, entry);
                   }).toList(),
                 ),
               )).toList(),
             ),
           );
+  }
+
+  Padding _buildLinhaInformacaoCard(String label, MapEntry<String, dynamic> entry) {
+    return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          '$label:',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          '${entry.value}',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  );
+  }
+
+  Map<String, String> getKeyLabels() {
+    final keyLabels = {
+      'estado': 'Estado',
+      'quantidade': 'Quantidade',
+      'faixaEtaria': 'Faixa etária',
+      'imcMedio': 'IMC médio',
+      'sexo': 'Sexo',
+      'percentualObesos': 'Percentual obesos',
+      'tipoSanguineo': 'Tipo sanguíneo',
+      'mediaIdade': 'Média Idade',
+      'tipoReceptor': 'Tipo receptor',
+    };
+    return keyLabels;
   }
 }
