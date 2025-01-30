@@ -39,6 +39,7 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                 .join(arquivo.usuario, usuario)
                 .where(usuario.id.eq(usuarioId).and(arquivo.id.eq(arquivoId)))
                 .groupBy(doador.estado)
+                .orderBy(doador.estado.asc())
                 .fetch();
     }
 
@@ -56,6 +57,7 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                 AND usuario.id = :usuarioId
             GROUP BY
                 FLOOR(DATE_PART('year', AGE(CAST(data_nasc AS date))) / 10)
+            ORDER BY faixa_etaria ASC
             """;
 
         Query query = em.createNativeQuery(sql);
@@ -99,6 +101,7 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                 .join(arquivo.usuario, usuario)
                 .where(arquivo.id.eq(arquivoId)
                         .and(usuario.id.eq(usuarioId)))
+                .orderBy(doador.sexo.asc())
                 .groupBy(doador.sexo);
 
         return query.fetch();
@@ -114,6 +117,7 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                 INNER JOIN usuario u ON a.usuario_id = u.id
                 WHERE a.id = :arquivoId AND u.id = :usuarioId
                 GROUP BY d.tipo_sanguineo
+                ORDER BY d.tipo_sanguineo ASC
             """;
 
         Query query = em.createNativeQuery(sql);
@@ -160,6 +164,7 @@ public class DoadorRepositoryImpl implements DoadorRepositoryCustom {
                             AND d.peso > 50
                         GROUP BY
                             r.tipo_receptor
+                        ORDER BY d.tipo_sanguineo ASC
             """;
 
         Query query = em.createNativeQuery(sql);

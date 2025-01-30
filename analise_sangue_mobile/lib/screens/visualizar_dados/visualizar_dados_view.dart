@@ -186,7 +186,7 @@ class _VisualizarDadosScreen extends StatelessWidget {
       'faixaEtaria': 'Faixa etária',
       'imcMedio': 'IMC médio',
       'sexo': 'Sexo',
-      'percentualObesos': 'Percentual obesos',
+      'percentualObesos': 'Obesos (%)',
       'tipoSanguineo': 'Tipo sanguíneo',
       'mediaIdade': 'Média Idade',
       'tipoReceptor': 'Tipo receptor',

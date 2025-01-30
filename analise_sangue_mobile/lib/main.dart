@@ -15,9 +15,9 @@ class AnaliseSangueApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5E60CE),
-          primary: const Color.fromRGBO(42, 155, 193, 1.0),
-          secondary: const Color.fromRGBO(28, 139, 175, 1.0),
+          seedColor: const Color.fromRGBO(129, 19, 19, 1.0),
+          primary: const Color.fromRGBO(175, 5, 5, 1.0),
+          secondary: const Color.fromRGBO(129, 19, 19, 1.0),
           background: const Color(0xFFF0F0F3),
         ),
         textTheme: const TextTheme(

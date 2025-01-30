@@ -48,7 +48,7 @@ class _LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Faça Login para continuar',
+                'Faça login para continuar',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
